@@ -1,0 +1,766 @@
+<!--
+                        |
+                    .   |
+                        |
+          \    *        |     *    .  /
+            \        *  |  .        /
+         .    \     ___---___     /    .  
+                \.--         --./     
+     ~-_    *  ./               \.   *   _-~
+        ~-_   /                   \   _-~     *
+   *       ~-/                     \-~        
+     .      |                       |      .
+         * |           NYC           | *     
+-----------|    Nor'easter Sunset    |-----------
+  .        |           2026          |        .    
+        *   |                       | *
+           _-\                     /-_    *
+     .  _-~ . \                   /   ~-_     
+     _-~       `\               /'*      ~-_  
+    ~           /`--___   ___--'\           ~
+           *  /        ---     .  \   jgs
+            /     *     |           \
+          /             |   *         \
+                     .  |        .
+                        |
+                        |
+Sun art by Joan G. Stark (Spunk)
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NYC Nor'easter Sunset 2026</title>
+<link rel="icon" href="asset/favicon.ico" id="favicon">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.6.0/color-thief.min.js"></script>
+<style>
+  html {
+    scrollbar-width: none;
+    --accent: #000;
+  }
+  html::-webkit-scrollbar {
+    display: none;
+  }
+  body {
+    margin: 0;
+    padding: 60px;
+    padding-right: calc(60px + 14px);
+    background: #ffffff;
+    overflow-x:hidden;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size:14px;
+  }
+  a{
+    color: var(--accent);
+  }
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 100px;
+    place-items:center;
+  }
+  #grid img,
+  #grid video {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: #eee;
+  }
+  body.row-view {
+    overflow: hidden;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  body.row-view #grid {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    width: 100%;
+    gap: 0;
+  }
+  body.row-view .cell {
+    width: auto;
+    flex: 0 0 auto;
+    position: relative;
+    cursor: pointer;
+  }
+  body.row-view .cell a {
+    position: relative;
+  }
+  body.row-view .swatch {
+    display: block;
+  }
+  body.row-view .cell img,
+  body.row-view .cell video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+  }
+  body.row-view .cell:hover img,
+  body.row-view .cell:hover video {
+    opacity: 1;
+    z-index: 2;
+    pointer-events: none;
+    width: auto !important;
+    height: min(500px, 70vh) !important;
+  }
+  .cell a {
+    display: block;
+  }
+  .swatch {
+    display: none;
+  }
+  .cell {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .caption {
+    line-height: 1.4;
+    margin-top: 8px;
+    opacity: 0;
+    cursor:default;
+  }
+  .cell:hover .caption {
+    opacity: 1;
+  }
+  .caption-name {
+    color:black;
+  }
+  .caption-desc {
+    color: #888;
+    margin-top: 2px;
+    white-space: pre-line;
+  }
+  body.row-view .caption {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 200px;
+  }
+  #top{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 60px;
+    z-index: 10000;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+    box-sizing: border-box;
+  }
+  #view-toggle {
+    display: flex;
+    gap: 10px;
+  }
+  #info{
+    cursor: pointer;
+  }
+  #info-panel {
+    position: fixed;
+    inset: 0;
+    background: #ffffff;
+    display: flex;
+    flex-direction:column;
+    align-items: center;
+    justify-content: center;
+    color:black;
+    text-align: center;
+    padding: 40px;
+    box-sizing: border-box;
+    z-index: 9500;
+  }
+  #info-panel[hidden] {
+    display: none;
+  }
+  #info-panel p{
+    max-width: 600px;
+  }
+  .view-option {
+    color: #ccc;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+  .view-option.active {
+    color:black;
+    text-decoration: underline;
+  }
+  #loading-container {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: black;
+    background: white;
+    z-index: 10001;
+  }
+  #loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  #loading-grid {
+    display: grid;
+    gap: 2px;
+  }
+  #loading-grid .loading-square {
+    width: 12px;
+    height: 12px;
+  }
+  #loading-count{
+    color:black;
+  }
+  #scroll-handle {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 6px;
+    z-index: 9999;
+    will-change: transform, height, background-color, width;
+    transition: background-color 0.2s ease, width 0.2s cubic-bezier(.4,0,.14,1);
+    cursor: grab;
+    touch-action: none;
+  }
+  #scroll-handle:hover{
+    width:20px;
+  }
+  #scroll-handle:active {
+    cursor: grabbing;
+  }
+  body.row-view #scroll-handle {
+    display: none;
+  }
+  @media (max-width: 768px) {
+    body {
+      padding: 60px 12px 12px;
+    }
+    #grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .caption {
+      display: none;
+    }
+    #scroll-handle {
+      display: none;
+    }
+    .view-option[data-view="row"] {
+      display: none;
+    }
+  }
+</style>
+</head>
+  <body>
+    <div id="loading-container">
+      <div id="loading-content">
+        <div id="loading-grid"></div>
+        <div id="loading-count"></div>
+      </div>
+    </div>
+    <div id="top">
+      <div id="view-toggle">
+        <button class="view-option active" data-view="grid">Grid</button>
+        <button class="view-option" data-view="row">Spectrum</button>
+      </div>
+      <div id="info">
+        ?
+      </div>
+    </div>
+    <div id="grid"></div>
+    <div id="scroll-handle"></div>
+    <div id="info-panel" hidden>
+      <p>This site is an album of sunset photos from September 25, 2026 in New York City, the evening before Nor'easter. Photos are contributed to this community <a href="https://www.are.na/ryan-yan/260925-nyc-sky" target="_blank">Are.na channel</a> and organized by dominant color using the <a href="https://lokeshdhakar.com/projects/color-thief/" target="_blank">Color Thief</a> library.</p>
+    </div>
+    <script>
+      const CHANNEL = "260925-nyc-sky";
+      const grid = document.getElementById("grid");
+      const colorThief = new ColorThief();
+
+      async function fetchAllBlocks() {
+        let page = 1;
+        let totalPages = 1;
+        const blocks = [];
+
+        do {
+          const res = await fetch(`https://api.are.na/v3/channels/${CHANNEL}/contents?page=${page}&per=24`);
+          const data = await res.json();
+          totalPages = data.meta.total_pages;
+          blocks.push(...data.data);
+          page++;
+        } while (page <= totalPages);
+
+        return blocks;
+      }
+
+      //check media type
+      function isMediaBlock(block) {
+        const contentType = block.attachment ? block.attachment.content_type : null;
+        if (contentType && contentType.startsWith("video/")) return true;
+        if (block.image) return true;
+        return false;
+      }
+
+      function colorSource(block) {
+        return block.image && block.image.medium ? block.image.medium.src : (block.image ? block.image.src : null);
+      }
+
+      function isDarkOrDull([r, g, b]) {
+        const [, s, l] = rgbToHsl([r, g, b]);
+        return l < 0.22 || s < 0.18;
+      }
+
+      //color thief
+      function getDominantColor(src) {
+        return new Promise((resolve) => {
+          if (!src) return resolve([200, 200, 200]);
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => {
+            try {
+              const palette = colorThief.getPalette(img, 10) || [];
+              const vibrant = palette.filter((c) => !isDarkOrDull(c));
+              const candidates = vibrant.length ? vibrant : palette;
+              resolve(candidates[0] || colorThief.getColor(img));
+            } catch (e) {
+              resolve([200, 200, 200]);
+            }
+          };
+          img.onerror = () => resolve([200, 200, 200]);
+          img.src = src;
+        });
+      }
+
+      function rgbToHsl([r, g, b]) {
+        r /= 255; g /= 255; b /= 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+
+        if (max === min) {
+          h = s = 0;
+        } else {
+          const d = max - min;
+          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+          switch (max) {
+            case r: h = ((g - b) / d + (g < b ? 6 : 0)); break;
+            case g: h = ((b - r) / d + 2); break;
+            case b: h = ((r - g) / d + 4); break;
+          }
+          h *= 60;
+        }
+        return [h, s, l];
+      }
+
+      function cleanDescriptionHtml(html) {
+        const container = document.createElement("div");
+        container.innerHTML = html;
+        container.querySelectorAll("blockquote").forEach((el) => el.remove());
+        container.querySelectorAll("br").forEach((br) => br.replaceWith("\n"));
+        const parts = Array.from(container.querySelectorAll(":scope > *"))
+          .map((el) => el.textContent.trim())
+          .filter(Boolean);
+        return parts.length ? parts.join("\n") : container.textContent.trim();
+      }
+
+      function getCaptionInfo(block) {
+        if (block.source) {
+          const rawTitle = block.title || block.source.title || "";
+          const match = rawTitle.match(/^(.*)\son\s(?:X|Twitter)\s@\S+$/i);
+          const name = match ? match[1] : rawTitle;
+          let desc = "";
+          if (block.description) {
+            desc = block.description.html
+              ? cleanDescriptionHtml(block.description.html)
+              : (block.description.plain || "");
+          }
+          return { name, desc };
+        }
+        const name = block.user ? block.user.name : "";
+        const desc = block.title || "";
+        return { name, desc };
+      }
+
+      function buildCaption(block) {
+        const { name, desc } = getCaptionInfo(block);
+        const caption = document.createElement("div");
+        caption.className = "caption";
+        if (name) {
+          const nameEl = document.createElement("div");
+          nameEl.className = "caption-name";
+          nameEl.textContent = name;
+          caption.appendChild(nameEl);
+        }
+        if (desc) {
+          const descEl = document.createElement("div");
+          descEl.className = "caption-desc";
+          descEl.textContent = desc;
+          caption.appendChild(descEl);
+        }
+        return caption;
+      }
+
+      function blockLink(block) {
+        return block.source && block.source.url ? block.source.url : `https://www.are.na/block/${block.id}`;
+      }
+
+      function renderBlock(block, color) {
+        const contentType = block.attachment ? block.attachment.content_type : null;
+        const rgb = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+
+        const cell = document.createElement("div");
+        cell.className = "cell";
+
+        const link = document.createElement("a");
+        link.href = blockLink(block);
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+
+        const swatch = document.createElement("div");
+        swatch.className = "swatch";
+        swatch.style.background = rgb;
+        link.appendChild(swatch);
+
+        if (contentType && contentType.startsWith("video/")) {
+          const video = document.createElement("video");
+          video.src = block.attachment.url;
+          video.poster = block.image ? block.image.src : "";
+          if (block.image && block.image.width && block.image.height) {
+            video.width = block.image.width;
+            video.height = block.image.height;
+          }
+          video.autoplay = true;
+          video.loop = true;
+          video.muted = true;
+          video.playsInline = true;
+          video.style.background = rgb;
+          link.appendChild(video);
+          cell.appendChild(link);
+          cell.appendChild(buildCaption(block));
+          grid.appendChild(cell);
+          return cell;
+        }
+
+        if (block.image) {
+          const img = document.createElement("img");
+          const source = block.image.medium || block.image;
+          img.src = source.src;
+          if (source.width && source.height) {
+            img.width = source.width;
+            img.height = source.height;
+          }
+          img.alt = block.title || "";
+          img.loading = "lazy";
+          img.style.background = rgb;
+          link.appendChild(img);
+          cell.appendChild(link);
+          cell.appendChild(buildCaption(block));
+          grid.appendChild(cell);
+          return cell;
+        }
+      }
+
+      const scrollHandle = document.getElementById("scroll-handle");
+      const viewToggle = document.getElementById("view-toggle");
+      const viewOptions = viewToggle.querySelectorAll(".view-option");
+      const cellColors = [];
+      let rowView = false;
+
+      function isMobile() {
+        return window.matchMedia("(max-width: 768px)").matches;
+      }
+
+      //color changing favicon!
+      const faviconLink = document.getElementById("favicon");
+      const defaultFaviconHref = faviconLink.href;
+      const faviconCanvas = document.createElement("canvas");
+      faviconCanvas.width = 32;
+      faviconCanvas.height = 32;
+      const faviconCtx = faviconCanvas.getContext("2d");
+
+      function setFaviconColor(rgb) {
+        faviconCtx.clearRect(0, 0, 32, 32);
+        faviconCtx.beginPath();
+        faviconCtx.arc(16, 16, 16, 0, Math.PI * 2);
+        faviconCtx.fillStyle = rgb;
+        faviconCtx.fill();
+        faviconLink.href = faviconCanvas.toDataURL("image/png");
+      }
+
+      function resetFavicon() {
+        faviconLink.href = defaultFaviconHref;
+      }
+
+      function updateScrollHandleColor() {
+        if (cellColors.length === 0) return;
+        const referenceY = window.innerHeight / 2;
+        let closestColor = null;
+        let closestDist = Infinity;
+
+        for (const { el, color } of cellColors) {
+          const rect = el.getBoundingClientRect();
+          if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
+          const dist = Math.abs(rect.top + rect.height / 2 - referenceY);
+          if (dist < closestDist) {
+            closestDist = dist;
+            closestColor = color;
+          }
+        }
+
+        if (closestColor) {
+          const rgb = `rgb(${closestColor[0]}, ${closestColor[1]}, ${closestColor[2]})`;
+          scrollHandle.style.background = rgb;
+          document.documentElement.style.setProperty("--accent", rgb);
+          setFaviconColor(rgb);
+        }
+      }
+
+      function updateScrollHandle() {
+        const scrollHeight = document.documentElement.scrollHeight;
+        const clientHeight = document.documentElement.clientHeight;
+        const scrollTop = window.scrollY;
+        const trackHeight = window.innerHeight;
+
+        const handleHeight = Math.max((clientHeight / scrollHeight) * trackHeight, 40);
+        const maxScrollTop = scrollHeight - clientHeight;
+        const maxHandleTop = trackHeight - handleHeight;
+        const handleTop = maxScrollTop > 0 ? (scrollTop / maxScrollTop) * maxHandleTop : 0;
+
+        scrollHandle.style.height = `${handleHeight}px`;
+        scrollHandle.style.transform = `translateY(${handleTop}px)`;
+
+        updateScrollHandleColor();
+      }
+
+      let scrollTicking = false;
+      function onScroll() {
+        if (rowView || scrollTicking) return;
+        scrollTicking = true;
+        requestAnimationFrame(() => {
+          updateScrollHandle();
+          scrollTicking = false;
+        });
+      }
+
+      document.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("resize", () => {
+        if (rowView) {
+          if (isMobile()) {
+            setView("grid");
+          } else {
+            layoutRowView();
+          }
+        } else {
+          updateScrollHandle();
+        }
+      });
+
+      let isDraggingHandle = false;
+      let dragStartY = 0;
+      let dragStartScrollTop = 0;
+
+      scrollHandle.addEventListener("pointerdown", (e) => {
+        isDraggingHandle = true;
+        dragStartY = e.clientY;
+        dragStartScrollTop = window.scrollY;
+        scrollHandle.setPointerCapture(e.pointerId);
+        document.body.style.userSelect = "none";
+        e.preventDefault();
+      });
+
+      scrollHandle.addEventListener("pointermove", (e) => {
+        if (!isDraggingHandle) return;
+
+        const scrollHeight = document.documentElement.scrollHeight;
+        const clientHeight = document.documentElement.clientHeight;
+        const trackHeight = window.innerHeight;
+        const handleHeight = scrollHandle.offsetHeight;
+        const maxScrollTop = scrollHeight - clientHeight;
+        const maxHandleTop = trackHeight - handleHeight;
+        if (maxHandleTop <= 0) return;
+
+        const scrollRatio = maxScrollTop / maxHandleTop;
+        const newScrollTop = Math.min(Math.max(dragStartScrollTop + (e.clientY - dragStartY) * scrollRatio, 0), maxScrollTop);
+        window.scrollTo(0, newScrollTop);
+      });
+
+      function endHandleDrag(e) {
+        if (!isDraggingHandle) return;
+        isDraggingHandle = false;
+        scrollHandle.releasePointerCapture(e.pointerId);
+        document.body.style.userSelect = "";
+      }
+
+      scrollHandle.addEventListener("pointerup", endHandleDrag);
+      scrollHandle.addEventListener("pointercancel", endHandleDrag);
+
+      function layoutRowView() {
+        const cells = Array.from(grid.children);
+        if (cells.length === 0) return;
+
+        let totalRatio = 0;
+        const ratios = cells.map((cell) => {
+          const media = cell.querySelector("img, video");
+          const ratio = media && media.width && media.height ? media.width / media.height : 1;
+          totalRatio += ratio;
+          return ratio;
+        });
+
+        const rowHeight = window.innerWidth / totalRatio;
+        const swatchHeight = Math.max(rowHeight, 60);
+
+        cells.forEach((cell, i) => {
+          const w = rowHeight * ratios[i];
+          const swatch = cell.querySelector(".swatch");
+          cell.style.width = `${w}px`;
+          if (swatch) {
+            swatch.style.width = `${w}px`;
+            swatch.style.height = `${swatchHeight}px`;
+          }
+        });
+      }
+
+      function clearRowViewSizing() {
+        grid.querySelectorAll(".cell").forEach((cell) => {
+          cell.style.width = "";
+        });
+        grid.querySelectorAll(".swatch").forEach((swatch) => {
+          swatch.style.width = "";
+          swatch.style.height = "";
+        });
+      }
+
+      grid.addEventListener("click", (e) => {
+        if (!rowView) return;
+        const cell = e.target.closest(".cell");
+        const link = cell ? cell.querySelector("a") : null;
+        if (link) window.open(link.href, "_blank", "noopener,noreferrer");
+      });
+
+      function positionHoverMedia(cell) {
+        const media = cell.querySelector("img, video");
+        if (!media) return;
+        const rect = media.getBoundingClientRect();
+        if (rect.width === 0) return;
+        const cellRect = cell.getBoundingClientRect();
+        const centerX = cellRect.left + cellRect.width / 2;
+        const desiredLeft = Math.max(0, Math.min(centerX - rect.width / 2, window.innerWidth - rect.width));
+        media.style.left = `${desiredLeft - cellRect.left}px`;
+      }
+
+      grid.addEventListener("pointerover", (e) => {
+        if (!rowView) return;
+        const cell = e.target.closest(".cell");
+        if (cell) positionHoverMedia(cell);
+      });
+
+      function setView(view) {
+        rowView = view === "row";
+        document.body.classList.toggle("row-view", rowView);
+        viewOptions.forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.view === view);
+        });
+
+        if (rowView) {
+          document.documentElement.style.setProperty("--accent", "#000");
+          resetFavicon();
+          layoutRowView();
+        } else {
+          clearRowViewSizing();
+          updateScrollHandle();
+        }
+      }
+
+      viewToggle.addEventListener("click", (e) => {
+        const btn = e.target.closest(".view-option");
+        if (btn) setView(btn.dataset.view);
+      });
+
+      const infoPanel = document.getElementById("info-panel");
+      let infoOpen = false;
+
+      function setInfoOpen(open) {
+        infoOpen = open;
+        infoPanel.hidden = !open;
+      }
+
+      document.addEventListener("click", (e) => {
+        if (infoOpen) {
+          if (e.target.closest("#info-panel a")) {
+            setInfoOpen(false);
+            return;
+          }
+          e.preventDefault();
+          e.stopPropagation();
+          setInfoOpen(false);
+          return;
+        }
+        if (e.target.closest("#info")) {
+          e.preventDefault();
+          e.stopPropagation();
+          setInfoOpen(true);
+        }
+      }, true);
+
+      async function main() {
+        const blocks = (await fetchAllBlocks()).filter(isMediaBlock);
+
+        const loadingGrid = document.getElementById("loading-grid");
+        const loadingCount = document.getElementById("loading-count");
+        const n = blocks.length;
+        const cols = Math.ceil(Math.sqrt(n));
+        const rows = cols;
+        loadingGrid.style.gridTemplateColumns = `repeat(${cols}, 12px)`;
+        loadingGrid.style.gridTemplateRows = `repeat(${rows}, 12px)`;
+        let loaded = 0;
+        loadingCount.textContent = `${loaded}/${n}`;
+
+        const centerX = (cols - 1) / 2;
+        const centerY = (rows - 1) / 2;
+        const cells = [];
+        for (let row = 0; row < rows; row++) {
+          for (let col = 0; col < cols; col++) {
+            cells.push({ col, row, dist: Math.hypot(col - centerX, row - centerY) });
+          }
+        }
+        cells.sort((a, b) => a.dist - b.dist);
+        let nextCell = 0;
+
+        const withColors = await Promise.all(
+          blocks.map(async (block) => {
+            const color = await getDominantColor(colorSource(block));
+            const { col, row } = cells[nextCell++];
+            const square = document.createElement("div");
+            square.className = "loading-square";
+            square.style.gridColumn = col + 1;
+            square.style.gridRow = row + 1;
+            square.style.background = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+            loadingGrid.appendChild(square);
+            loaded++;
+            loadingCount.textContent = `${loaded} / ${n}`;
+            const [h] = rgbToHsl(color);
+            return { block, color, hue: h };
+          })
+        );
+
+        withColors.sort((a, b) => a.hue - b.hue);
+
+        for (const { block, color } of withColors) {
+          const cell = renderBlock(block, color);
+          if (cell) cellColors.push({ el: cell, color });
+        }
+
+        updateScrollHandle();
+        document.getElementById("loading-container").remove();
+      }
+
+      main();
+    </script>
+  </body>
+</html>
