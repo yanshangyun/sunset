@@ -69,8 +69,8 @@ Sun art by Joan G. Stark (Spunk)
   }
   body.row-view {
     overflow: hidden;
-    padding-left: 0;
-    padding-right: 0;
+    padding-left: 20px;
+    padding-right: 20px;
   }
   body.row-view #grid {
     display: flex;
@@ -139,6 +139,7 @@ Sun art by Joan G. Stark (Spunk)
     top: 100%;
     left: 0;
     width: 200px;
+    z-index: 3;
   }
   #top{
     position: fixed;
@@ -612,7 +613,7 @@ Sun art by Joan G. Stark (Spunk)
           return ratio;
         });
 
-        const rowHeight = window.innerWidth / totalRatio;
+        const rowHeight = grid.clientWidth / totalRatio;
         const swatchHeight = Math.max(rowHeight, 60);
 
         cells.forEach((cell, i) => {
@@ -649,9 +650,17 @@ Sun art by Joan G. Stark (Spunk)
         const rect = media.getBoundingClientRect();
         if (rect.width === 0) return;
         const cellRect = cell.getBoundingClientRect();
+        const margin = 20;
         const centerX = cellRect.left + cellRect.width / 2;
-        const desiredLeft = Math.max(0, Math.min(centerX - rect.width / 2, window.innerWidth - rect.width));
-        media.style.left = `${desiredLeft - cellRect.left}px`;
+        const desiredLeft = Math.max(margin, Math.min(centerX - rect.width / 2, window.innerWidth - margin - rect.width));
+        const left = desiredLeft - cellRect.left;
+        media.style.left = `${left}px`;
+
+        const caption = cell.querySelector(".caption");
+        if (caption) {
+          caption.style.top = `${rect.height}px`;
+          caption.style.left = `${left}px`;
+        }
       }
 
       grid.addEventListener("pointerover", (e) => {
